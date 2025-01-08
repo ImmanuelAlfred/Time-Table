@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\MassDestroyFacultyRequest;
-use App\Http\Requests\StoreFacultyRequest;
-use App\Http\Requests\UpdateFacultyRequest;
+// use App\Http\Requests\MassDestroyFacultyRequest;
+// use App\Http\Requests\StoreFacultyRequest;
+// use App\Http\Requests\UpdateFacultyRequest;
 use App\Models\Faculty;
 use Gate;
-use Illuminate\Http\Request;
+//use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class FacultyController extends Controller
@@ -31,8 +31,18 @@ class FacultyController extends Controller
 
     public function store(StoreFacultyRequest $request)
     {
-        $faculty = Faculty::create($request->all());
-
+       $request->validate([
+            'name' => [
+                'string',
+                'required',
+            ],
+            'code' => [
+                'required',
+                'integer',
+                'min:-2147483648',
+                'max:2147483647',
+            ],
+       ]);
         return redirect()->route('admin.faculties.index');
     }
 
@@ -43,9 +53,20 @@ class FacultyController extends Controller
         return view('admin.faculties.edit', compact('faculty'));
     }
 
-    public function update(UpdateFacultyRequest $request, Faculty $faculty)
+    public function update(Request $request, Faculty $faculty)
     {
-        $faculty->update($request->all());
+        $request->validate([
+            'name' => [
+                'string',
+                'required',
+            ],
+            'code' => [
+                'required',
+                'integer',
+                'min:-2147483648',
+                'max:2147483647',
+            ],
+        ]);
 
         return redirect()->route('admin.faculties.index');
     }
@@ -68,13 +89,12 @@ class FacultyController extends Controller
         return back();
     }
 
-    public function massDestroy(MassDestroyFacultyRequest $request)
+    public function massDestroy(Request $request)
     {
-        $faculties = Faculty::find(request('ids'));
-
-        foreach ($faculties as $faculty) {
-            $faculty->delete();
-        }
+        $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:faculties,id',
+        ]);
 
         return response(null, Response::HTTP_NO_CONTENT);
     }
