@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdatePasswordRequest;
-use App\Http\Requests\UpdateProfileRequest;
+// use App\Http\Requests\UpdatePasswordRequest;
+// use App\Http\Requests\UpdateProfileRequest;
 use Gate;
-use Illuminate\Http\Request;
+//use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProfileController extends Controller
@@ -16,11 +16,13 @@ class ProfileController extends Controller
         return view('frontend.profile');
     }
 
-    public function update(UpdateProfileRequest $request)
+    public function update(Request $request)
     {
-        $user = auth()->user();
+       $request->validate([
+           'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . auth()->id()],
 
-        $user->update($request->validated());
+       ]);
 
         return redirect()->route('frontend.profile.index')->with('message', __('global.update_profile_success'));
     }
