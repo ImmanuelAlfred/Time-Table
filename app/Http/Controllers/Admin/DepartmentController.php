@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\MassDestroyDepartmentRequest;
-use App\Http\Requests\StoreDepartmentRequest;
-use App\Http\Requests\UpdateDepartmentRequest;
+// use App\Http\Requests\MassDestroyDepartmentRequest;
+// use App\Http\Requests\StoreDepartmentRequest;
+// use App\Http\Requests\UpdateDepartmentRequest;
 use App\Models\Department;
 use App\Models\Faculty;
 use Gate;
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class DepartmentController extends Controller
@@ -32,9 +32,20 @@ class DepartmentController extends Controller
         return view('admin.departments.create', compact('names'));
     }
 
-    public function store(StoreDepartmentRequest $request)
+    public function store(Request $request)
     {
-        $department = Department::create($request->all());
+        $request->validate([
+            'department_name' => [
+                'string',
+                'required',
+            ],
+            'code' => [
+                'nullable',
+                'integer',
+                'min:-2147483648',
+                'max:2147483647',
+            ],
+        ]);
 
         return redirect()->route('admin.departments.index');
     }
@@ -50,9 +61,20 @@ class DepartmentController extends Controller
         return view('admin.departments.edit', compact('department', 'names'));
     }
 
-    public function update(UpdateDepartmentRequest $request, Department $department)
+    public function update(Request $request, Department $department)
     {
-        $department->update($request->all());
+       $request->validate([
+        'department_name' => [
+            'string',
+            'required',
+        ],
+        'code' => [
+            'nullable',
+            'integer',
+            'min:-2147483648',
+            'max:2147483647',
+        ],
+    ]);
 
         return redirect()->route('admin.departments.index');
     }
@@ -75,13 +97,13 @@ class DepartmentController extends Controller
         return back();
     }
 
-    public function massDestroy(MassDestroyDepartmentRequest $request)
+    public function massDestroy(Request $request)
     {
-        $departments = Department::find(request('ids'));
+       $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:departments,id',
+       ]);
 
-        foreach ($departments as $department) {
-            $department->delete();
-        }
 
         return response(null, Response::HTTP_NO_CONTENT);
     }
