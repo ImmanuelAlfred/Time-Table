@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\MassDestroyUserRequest;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
+// use App\Http\Requests\MassDestroyUserRequest;
+// use App\Http\Requests\StoreUserRequest;
+// use App\Http\Requests\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
 use Gate;
-use Illuminate\Http\Request;
+//use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class UsersController extends Controller
@@ -32,11 +32,28 @@ class UsersController extends Controller
         return view('admin.users.create', compact('roles'));
     }
 
-    public function store(StoreUserRequest $request)
+    public function store(Request $request)
     {
-        $user = User::create($request->all());
-        $user->roles()->sync($request->input('roles', []));
-
+        $request->validate([
+            'name' => [
+                'string',
+                'required',
+            ],
+            'email' => [
+                'required',
+                'unique:users',
+            ],
+            'password' => [
+                'required',
+            ],
+            'roles.*' => [
+                'integer',
+            ],
+            'roles' => [
+                'required',
+                'array',
+            ],
+     ]);
         return redirect()->route('admin.users.index');
     }
 
@@ -51,10 +68,25 @@ class UsersController extends Controller
         return view('admin.users.edit', compact('roles', 'user'));
     }
 
-    public function update(UpdateUserRequest $request, User $user)
+    public function update(Request $request, User $user)
     {
-        $user->update($request->all());
-        $user->roles()->sync($request->input('roles', []));
+       $request->validate([
+        'name' => [
+            'string',
+            'required',
+        ],
+        'email' => [
+            'required',
+            'unique:users,email,' . request()->route('user')->id,
+        ],
+        'roles.*' => [
+            'integer',
+        ],
+        'roles' => [
+            'required',
+            'array',
+        ],
+    ]);
 
         return redirect()->route('admin.users.index');
     }
@@ -77,13 +109,12 @@ class UsersController extends Controller
         return back();
     }
 
-    public function massDestroy(MassDestroyUserRequest $request)
+    public function massDestroy(Request $request)
     {
-        $users = User::find(request('ids'));
-
-        foreach ($users as $user) {
-            $user->delete();
-        }
+       $request->validate([
+        'ids'   => 'required|array',
+        'ids.*' => 'exists:users,id',
+       ]);
 
         return response(null, Response::HTTP_NO_CONTENT);
     }
