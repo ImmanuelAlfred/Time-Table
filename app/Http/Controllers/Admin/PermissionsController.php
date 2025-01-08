@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\MassDestroyPermissionRequest;
-use App\Http\Requests\StorePermissionRequest;
-use App\Http\Requests\UpdatePermissionRequest;
+// use App\Http\Requests\MassDestroyPermissionRequest;
+// use App\Http\Requests\StorePermissionRequest;
+// use App\Http\Requests\UpdatePermissionRequest;
 use App\Models\Permission;
 use Gate;
-use Illuminate\Http\Request;
+//use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class PermissionsController extends Controller
@@ -29,9 +29,14 @@ class PermissionsController extends Controller
         return view('admin.permissions.create');
     }
 
-    public function store(StorePermissionRequest $request)
+    public function store(Request $request)
     {
-        $permission = Permission::create($request->all());
+        $request->validate([
+            'title' => [
+                'string',
+                'required',
+            ],
+        ]);
 
         return redirect()->route('admin.permissions.index');
     }
@@ -43,9 +48,14 @@ class PermissionsController extends Controller
         return view('admin.permissions.edit', compact('permission'));
     }
 
-    public function update(UpdatePermissionRequest $request, Permission $permission)
+    public function update(UpRequest $request, Permission $permission)
     {
-        $permission->update($request->all());
+        $request->validate([
+            'title' => [
+                'string',
+                'required',
+            ],
+        ]);
 
         return redirect()->route('admin.permissions.index');
     }
@@ -66,13 +76,12 @@ class PermissionsController extends Controller
         return back();
     }
 
-    public function massDestroy(MassDestroyPermissionRequest $request)
+    public function massDestroy(Request $request)
     {
-        $permissions = Permission::find(request('ids'));
-
-        foreach ($permissions as $permission) {
-            $permission->delete();
-        }
+        $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:permissions,id',
+        ]);
 
         return response(null, Response::HTTP_NO_CONTENT);
     }
