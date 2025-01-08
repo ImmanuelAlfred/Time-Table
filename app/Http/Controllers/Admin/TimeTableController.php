@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Traits\MediaUploadingTrait;
-use App\Http\Requests\MassDestroyTimeTableRequest;
-use App\Http\Requests\StoreTimeTableRequest;
-use App\Http\Requests\UpdateTimeTableRequest;
+// use App\Http\Requests\MassDestroyTimeTableRequest;
+// use App\Http\Requests\StoreTimeTableRequest;
+// use App\Http\Requests\UpdateTimeTableRequest;
 use App\Models\Department;
 use App\Models\TimeTable;
 use Gate;
-use Illuminate\Http\Request;
+//use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -36,10 +36,16 @@ class TimeTableController extends Controller
         return view('admin.timeTables.create', compact('department_names'));
     }
 
-    public function store(StoreTimeTableRequest $request)
+    public function store(Request $request)
     {
         $request->validate([
-            'time_table'=> 'required|file|max:2048',
+           'time_table' => [
+                'array',
+            ],
+            'department_name_id' => [
+                'required',
+                'integer',
+            ],
         ]);
 
 
@@ -67,9 +73,17 @@ class TimeTableController extends Controller
         return view('admin.timeTables.edit', compact('department_names', 'timeTable'));
     }
 
-    public function update(UpdateTimeTableRequest $request, TimeTable $timeTable)
+    public function update(Request $request, TimeTable $timeTable)
     {
-        $timeTable->update($request->all());
+        $request->validate([
+            'time_table' => [
+                'array',
+            ],
+            'department_name_id' => [
+                'required',
+                'integer',
+            ],
+        ]);
 
         if (count($timeTable->time_table) > 0) {
             foreach ($timeTable->time_table as $media) {
@@ -106,13 +120,12 @@ class TimeTableController extends Controller
         return back();
     }
 
-    public function massDestroy(MassDestroyTimeTableRequest $request)
+    public function massDestroy(Request $request)
     {
-        $timeTables = TimeTable::find(request('ids'));
-
-        foreach ($timeTables as $timeTable) {
-            $timeTable->delete();
-        }
+        $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:time_tables,id',
+        ]);
 
         return response(null, Response::HTTP_NO_CONTENT);
     }
